@@ -30,4 +30,5 @@ ib.reqPositions();
 
 ib.on('positionEnd', function () {
   ib.disconnect();
-});
+ require("process").exit(0);
+ });
