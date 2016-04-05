@@ -1,6 +1,7 @@
 require('colors');
 var _ = require('lodash');
 
+var p = {};
 var ib = new (require('..'))({
   // clientId: 0,
   // host: '127.0.0.1',
@@ -12,7 +13,18 @@ var ib = new (require('..'))({
     console.log('%s %s', (event + ':').yellow, JSON.stringify(args));
   }
 }).on('position', function (account, contract, pos, avgCost) {
-  console.log(
+    var expiry = p[contract.expiry] || {},
+        symbol = expiry[contract.symbol] || {},
+        right = symbol[contract.right] || {netLong: 0, netStrike: 0};
+
+    right.netLong = right.netLong + pos;
+    right.netStrike = right.netStrike + pos * contract.strike * (contract.right === "P" ? 1 : -1);
+
+    symbol[contract.right] = right;
+    expiry[contract.symbol] = symbol;
+    p[contract.expiry] = expiry;
+
+  if (contract.symbol === "QQQ" /*&& contract.right === "P"*/  /* && contract.expiry === "20160520" */) console.log(
     '%s %s%s %s%s %s%s %s%s',
     '[position]'.cyan,
     'account='.bold, account,
@@ -22,6 +34,10 @@ var ib = new (require('..'))({
   );
 }).on('positionEnd', function () {
   console.log('[positionEnd]'.cyan);
+  Object.getOwnPropertyNames(p).forEach((x) => {
+      console.log(x + ":");
+      console.log(p[x]);
+  });
 });
 
 ib.connect();
